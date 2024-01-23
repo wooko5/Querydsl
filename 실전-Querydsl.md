@@ -97,6 +97,17 @@
        - querydsl-apt: Querydsl : 관련 코드 생성 기능 제공
        - querydsl-jpa: querydsl : 라이브러리
 
+   - H2 DB 설치
+
+     - 경로
+       - `C:\Program Files (x86)\H2\bin`
+     - 관리자 권한으로 git-bash 열고 `chmod 755 h2.sh`
+       - ![image-20240124013713101](C:\Users\wooko\AppData\Roaming\Typora\typora-user-images\image-20240124013713101.png)
+     - H2  접속 방법
+       - 최초 접속 : `jdbc:h2:~/querydsl `
+       - 이후에는 `jdbc:h2:tcp://localhost/~/querydsl`
+       - ![image-20240124014653119](C:\Users\wooko\AppData\Roaming\Typora\typora-user-images\image-20240124014653119.png)
+
 2. 예제 도메인 모델
 
 3. 기본 문법
