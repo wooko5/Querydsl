@@ -45,7 +45,12 @@ tasks.named('test') {
 	useJUnitPlatform()
 }
 
+// clean시, 해당 경로의 파일 삭제
 clean {
 	delete file('src/main/generated')
 }
 
+// querydsl QClass 파일 생성 위치를 지정
+tasks.withType(JavaCompile) {
+	options.getGeneratedSourceOutputDirectory().set(file('src/main/generated'))
+}
