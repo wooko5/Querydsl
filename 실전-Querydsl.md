@@ -83,7 +83,19 @@
        - /src/main/generated에 있는 Q파일들은 git에 올리지 않아야함
        - 스프링을 다른 프레임워크로 바꿀 생각이라면 EntityManager를 주입받을 때, @Autowired보다 @PersistenceContext을 추천
          - @PersistenceContext는 스프링에 종속적이지 않은 java의 어노테이션
-       - 
+
+   - 라이브러리 살펴보기
+
+     - gradle 의존관계 보기
+
+       - ```groovy
+         ./gradlew dependencies --configuration compileClasspath
+         ```
+
+     - Querydsl 라이브러리 살펴보기
+
+       - querydsl-apt: Querydsl : 관련 코드 생성 기능 제공
+       - querydsl-jpa: querydsl : 라이브러리
 
 2. 예제 도메인 모델
 
