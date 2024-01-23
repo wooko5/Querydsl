@@ -102,11 +102,11 @@
      - 경로
        - `C:\Program Files (x86)\H2\bin`
      - 관리자 권한으로 git-bash 열고 `chmod 755 h2.sh`
-       - ![image-20240124013713101](C:\Users\wooko\AppData\Roaming\Typora\typora-user-images\image-20240124013713101.png)
+       - ![image-20240124013713101](https://github.com/wooko5/Querydsl/assets/58154633/fcc5651e-3cf9-404a-8cf2-e26fdf46be9e)
      - H2  접속 방법
        - 최초 접속 : `jdbc:h2:~/querydsl `
        - 이후에는 `jdbc:h2:tcp://localhost/~/querydsl`
-       - ![image-20240124014653119](C:\Users\wooko\AppData\Roaming\Typora\typora-user-images\image-20240124014653119.png)
+       - ![image-20240124014653119](https://github.com/wooko5/Querydsl/assets/58154633/4513f675-cf98-4383-82f4-a951bf523fb9)
 
 2. 예제 도메인 모델
 
