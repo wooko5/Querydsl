@@ -107,10 +107,49 @@
        - 최초 접속 : `jdbc:h2:~/querydsl `
        - 이후에는 `jdbc:h2:tcp://localhost/~/querydsl`
        - ![image-20240124014653119](https://github.com/wooko5/Querydsl/assets/58154633/4513f675-cf98-4383-82f4-a951bf523fb9)
+     
+   - 스프링부트 설정 -JPA, DB
+
+     - application.yml
+
+       - ```yaml
+         spring:
+           datasource:
+             url: jdbc:h2:tcp://localhost/~/querydsl
+             username: sa
+             password:
+             driver-class-name: org.h2.Driver
+           jpa:
+             hibernate:
+               ddl-auto: create
+             properties:
+               hibernate:
+         #        show_sql: true # System.out 에 하이버네이트 실행 SQL을 남긴다, 밑의 옵션과 같이 사용하면 중복이기에 주석처리
+                 format_sql: true # logger를 통해 하이버네이트 실행 SQL을 남긴다
+         
+         logging.level:
+           org.hibernate.SQL: debug
+         #  org.hibernate.type: trace
+         ```
 
 2. 예제 도메인 모델
 
 3. 기본 문법
+
+   - JPQL VS Querydsl
+   - 기본 Q-Type 활용
+   - 검색 조건 쿼리
+   - 결과조회
+   - 정렬
+   - 페이징
+   - 집합
+   - 조인
+     - 기본조인
+     - ON 절
+     - Fetch 조인
+   - 서브쿼리
+   - Case문
+   - 상수, 문자 더하기
 
 4. 중급 문법
 

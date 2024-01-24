@@ -9,8 +9,8 @@ spring:
       ddl-auto: create
     properties:
       hibernate:
-#        show_sql: true
-        format_sql: true
+#        show_sql: true # System.out 에 하이버네이트 실행 SQL을 남긴다, 밑의 옵션과 같이 사용하면 중복이기에 주석처리
+        format_sql: true # logger를 통해 하이버네이트 실행 SQL을 남긴다
 
 logging.level:
   org.hibernate.SQL: debug
