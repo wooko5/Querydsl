@@ -137,18 +137,61 @@
 3. 기본 문법
 
    - JPQL VS Querydsl
+
+     - JPQL 테스트 코드
+
+       - ```java
+         @Test
+         public void startJPQL() {
+             Member foundMember = entityManager.createQuery(
+                             "select m from Member m where m.username = :username", Member.class
+                     )
+                     .setParameter("username", "member1")
+                     .getSingleResult();
+             assertThat(foundMember.getAge()).isEqualTo(10);
+         }
+         ```
+
+     - Querydsl 테스트 코드
+
+       - ```java
+         @Test
+         public void startQuerydsl() {
+             JPAQueryFactory queryFactory = new JPAQueryFactory(entityManager);
+             QMember qMember = new QMember("test"); //variable은 alias(별칭)를 의미(크게 중요하진 X)
+         
+             Member foundMember = queryFactory
+                     .select(qMember)
+                     .from(qMember)
+                     .where(qMember.username.eq("member1"))
+                     .fetchOne();
+             assert foundMember != null;
+             assertThat(foundMember.getAge()).isEqualTo(10);
+         }
+         ```
+
    - 기본 Q-Type 활용
+
    - 검색 조건 쿼리
+
    - 결과조회
+
    - 정렬
+
    - 페이징
+
    - 집합
+
    - 조인
+
      - 기본조인
      - ON 절
      - Fetch 조인
+
    - 서브쿼리
+
    - Case문
+
    - 상수, 문자 더하기
 
 4. 중급 문법
