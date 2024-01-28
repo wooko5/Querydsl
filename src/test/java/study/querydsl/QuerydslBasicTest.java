@@ -1,5 +1,6 @@
 package study.querydsl;
 
+import com.querydsl.core.QueryResults;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -11,7 +12,10 @@ import study.querydsl.entity.Member;
 import study.querydsl.entity.QMember;
 import study.querydsl.entity.Team;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static study.querydsl.entity.QMember.member;
 
 @SpringBootTest
 @Transactional
@@ -51,16 +55,102 @@ public class QuerydslBasicTest {
     }
 
     @Test
-    public void startQuerydsl() {
+    public void startQuerydslV1() {
         jpaQueryFactory = new JPAQueryFactory(entityManager);
-        QMember qMember = new QMember("test"); //variable은 alias(별칭)를 의미(크게 중요하진 X)
+        QMember qMember = new QMember("test"); //variable은 alias(별칭)를 의미(같은 테이블을 조인해서 alias룰 다르게 설정할 때 필요!!!
 
         Member foundMember = jpaQueryFactory
-                .select(qMember)
+                .select(qMember) //QMember.member를 static으로 선언
                 .from(qMember)
                 .where(qMember.username.eq("member1"))
                 .fetchOne();
         assert foundMember != null;
         assertThat(foundMember.getAge()).isEqualTo(10);
+    }
+
+    @Test
+    public void startQuerydslV2() {
+        jpaQueryFactory = new JPAQueryFactory(entityManager);
+
+        Member foundMember = jpaQueryFactory
+                .select(member)
+                .from(member)
+                .where(member.username.eq("member1"))
+                .fetchOne();
+        assert foundMember != null;
+        assertThat(foundMember.getAge()).isEqualTo(10);
+    }
+
+    @Test
+    public void search() {
+        jpaQueryFactory = new JPAQueryFactory(entityManager);
+
+        Member foundMember = jpaQueryFactory
+                .selectFrom(member)
+                .where(member.username.eq("member1")
+                        .and(member.age.eq(10)))
+                .fetchOne();
+        assertThat(foundMember.getUsername()).isEqualTo("member1");
+    }
+
+    @Test
+    public void searchBetween() {
+        jpaQueryFactory = new JPAQueryFactory(entityManager);
+
+        List<Member> foundMember = jpaQueryFactory
+                .selectFrom(member)
+                .where(member.age.between(10, 30))
+                .fetch();
+        assertThat(foundMember.size()).isEqualTo(3);
+    }
+
+    @Test
+    public void searchAndParam() {
+        jpaQueryFactory = new JPAQueryFactory(entityManager);
+
+        Member foundMember = jpaQueryFactory
+                .selectFrom(member)
+                .where(
+                        member.username.eq("member1"), //쉼표만 작성해도 and와 같은 코드가 됨
+                        member.age.between(10, 30)
+                )
+                .fetchOne();
+        assertThat(foundMember.getUsername()).isEqualTo("member1");
+    }
+
+    @Test
+    public void resultFetch() {
+        jpaQueryFactory = new JPAQueryFactory(entityManager);
+
+//        List<Member> fetch = jpaQueryFactory
+//                .selectFrom(member)
+//                .fetch();
+
+//        Member fetchOne = jpaQueryFactory
+//                .selectFrom(member)
+//                .fetchOne();
+
+//        Member fetchFirst = jpaQueryFactory
+//                .selectFrom(member)
+//                .fetchFirst();
+
+        QueryResults<Member> results = jpaQueryFactory
+                .selectFrom(member)
+                .fetchResults(); //deprecated: groupby, having 절 둥 복잡한 페이징 SQL 문에서 예외가 발생함
+
+        results.getTotal();
+        List<Member> contents = results.getResults();
+
+    }
+
+    /**
+     * 회원 정렬 순서
+     * 1. 회원 나이 내림차순(desc)
+     * 2. 회원 이름 올림차순(asc)
+     * 단 2에서 회원 이름이 없으면 마지막에 출력(nulls last)
+     */
+    @Test
+    public void sort(){
+
     }
 }

@@ -155,13 +155,15 @@
      - Querydsl 테스트 코드
 
        - ```java
+         import static study.querydsl.entity.QMember.member;
+         
          @Test
          public void startQuerydsl() {
              JPAQueryFactory queryFactory = new JPAQueryFactory(entityManager);
              QMember qMember = new QMember("test"); //variable은 alias(별칭)를 의미(크게 중요하진 X)
          
              Member foundMember = queryFactory
-                     .select(qMember)
+                     .select(qMember) //QMember.member를 static으로 선언
                      .from(qMember)
                      .where(qMember.username.eq("member1"))
                      .fetchOne();
@@ -172,11 +174,59 @@
 
    - 기본 Q-Type 활용
 
+     - 코드 축약
+
+       - ```java
+         @Test
+         public void startQuerydslV1() {
+             jpaQueryFactory = new JPAQueryFactory(entityManager);
+             QMember qMember = new QMember("test"); //variable은 alias(별칭)를 의미(같은 테이블을 조인해서 alias룰 다르게 설정할 때 필요!!!
+         
+             Member foundMember = jpaQueryFactory
+                     .select(qMember) //QMember.member를 static으로 선언
+                     .from(qMember)
+                     .where(qMember.username.eq("member1"))
+                     .fetchOne();
+             assert foundMember != null;
+             assertThat(foundMember.getAge()).isEqualTo(10);
+         }
+         ```
+
    - 검색 조건 쿼리
+
+     - 코드
+
+       - ```java
+         @Test
+         public void searchAndParam() {
+             jpaQueryFactory = new JPAQueryFactory(entityManager);
+         
+             Member foundMember = jpaQueryFactory
+                     .selectFrom(member)
+                     .where(
+                             member.username.eq("member1"), //쉼표만 작성해도 and와 같은 코드가 됨
+                             member.age.between(10, 30)
+                     )
+                     .fetchOne();
+             assertThat(foundMember.getUsername()).isEqualTo("member1");
+         }
+         ```
 
    - 결과조회
 
+     - fetch() : 리스트 조회, 데이터 없으면 빈 리스트 반환
+     - fetchOne() : 단 건 조회
+       - 결과가 없으면 : null
+       - 결과가 둘 이상이면 : com.querydsl.core.NonUniqueResultException
+     - fetchFirst() : limit(1).fetchOne()
+     - fetchResults() : 페이징 정보 포함, total count 쿼리 추가 실행
+       - 페이징 쿼리가 복잡해질 때, 데이터를 가져오는 쿼리랑 토탈 개수 쿼리가 성능 최적화 때문에 다를 수 있음
+       - **페이징 쿼리가 복잡하거나 성능이 중요한 쿼리에서는 fetchResults()를 사용하면 X**
+     - fetchCount() : count 쿼리로 변경해서 count 수 조회
+
    - 정렬
+
+     - 
 
    - 페이징
 
