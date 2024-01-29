@@ -225,7 +225,7 @@
      - fetchResults() : 페이징 정보 포함, total count 쿼리 추가 실행
        - 페이징 쿼리가 복잡해질 때, 데이터를 가져오는 쿼리랑 토탈 개수 쿼리가 성능 최적화 때문에 다를 수 있음
        - **페이징 쿼리가 복잡하거나 성능이 중요한 쿼리에서는 fetchResults()를 사용하면 X**
-       - **deprecated!**
+       - **deprecated! ==> IntelliJ에서는 fetch()를 대신 사용하길 권유**
        
      - fetchCount() : count 쿼리로 변경해서 count 수 조회
 
@@ -297,7 +297,76 @@
 
    - 페이징
 
-   - 집합
+     - 코드
+
+       - ```java
+         @Test
+         public void paging1() {
+             List<Member> result = queryFactory
+                 .selectFrom(member)
+                 .orderBy(member.username.desc())
+                 .offset(1) //0부터 시작(zero index)
+                 .limit(2) //최대 2건 조회
+                 .fetch();
+             assertThat(result.size()).isEqualTo(2);
+         }
+         ```
+
+   - 집계
+
+     - aggregation 코드
+
+       - ```java
+         /**
+         * 실무에서는 Tuple을 직접 쓰는 방법보다
+         * DTO로 바로 조회하는 방법을 더 많이 쓴다
+         */
+         @Test
+         public void aggregation() {
+             List<Tuple> result = jpaQueryFactory
+                     .select(
+                             member.count(),
+                             member.age.sum(),
+                             member.age.avg(),
+                             member.age.max(),
+                             member.age.min()
+                     )
+                     .from(member)
+                     .fetch();
+         
+             Tuple tuple = result.get(0);
+             assertThat(tuple.get(member.count())).isEqualTo(4);
+             assertThat(tuple.get(member.age.sum())).isEqualTo(100);
+             assertThat(tuple.get(member.age.max())).isEqualTo(40);
+             assertThat(tuple.get(member.age.min())).isEqualTo(10);
+         }
+         ```
+
+     - groupBy 코드
+
+       - ```java
+         /**
+         * 팀명과 각 팀의 평균 연령을 구하는 테스트
+         */
+         @Test
+         public void groupBy() {
+             List<Tuple> result = jpaQueryFactory
+                     .select(team.name, member.age.avg())
+                     .from(member)
+                     .join(member.team, team)
+                     .groupBy(team.name)
+                     .fetch();
+         
+             Tuple teamA = result.get(0);
+             Tuple teamB = result.get(1);
+         
+             assertThat(teamA.get(team.name)).isEqualTo("teamA");
+             assertThat(teamB.get(team.name)).isEqualTo("teamB");
+         
+             assertThat(teamA.get(member.age.avg())).isEqualTo(15);
+             assertThat(teamB.get(member.age.avg())).isEqualTo(35);
+         }
+         ```
 
    - 조인
 
