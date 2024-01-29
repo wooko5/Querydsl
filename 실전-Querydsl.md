@@ -215,18 +215,85 @@
    - 결과조회
 
      - fetch() : 리스트 조회, 데이터 없으면 빈 리스트 반환
+
      - fetchOne() : 단 건 조회
        - 결과가 없으면 : null
        - 결과가 둘 이상이면 : com.querydsl.core.NonUniqueResultException
+       
      - fetchFirst() : limit(1).fetchOne()
+
      - fetchResults() : 페이징 정보 포함, total count 쿼리 추가 실행
        - 페이징 쿼리가 복잡해질 때, 데이터를 가져오는 쿼리랑 토탈 개수 쿼리가 성능 최적화 때문에 다를 수 있음
        - **페이징 쿼리가 복잡하거나 성능이 중요한 쿼리에서는 fetchResults()를 사용하면 X**
+       - **deprecated!**
+       
      - fetchCount() : count 쿼리로 변경해서 count 수 조회
+
+     - 코드
+
+       - ```java
+         @Test
+         public void resultFetch() {
+         //        List<Member> fetch = jpaQueryFactory
+         //                .selectFrom(member)
+         //                .fetch();
+         
+         //        Member fetchOne = jpaQueryFactory
+         //                .selectFrom(member)
+         //                .fetchOne();
+         
+         //        Member fetchFirst = jpaQueryFactory
+         //                .selectFrom(member)
+         //                .fetchFirst();
+         
+             QueryResults<Member> results = jpaQueryFactory
+                     .selectFrom(member)
+                     .fetchResults(); //deprecated: groupby, having 절 둥 복잡한 페이징 SQL 문에서 예외가 발생함
+         
+             results.getTotal();
+             List<Member> contents = results.getResults();
+         
+         }
+         ```
+
+         
 
    - 정렬
 
-     - 
+     - 코드
+
+       - ```java
+         /**
+         * 회원 정렬 순서
+         * 1. 회원 나이 내림차순(desc)
+         * 2. 회원 이름 올림차순(asc)
+         * 단 2에서 회원 이름이 없으면 마지막에 출력(nulls last)
+         */
+         @Test
+         public void sort() {
+             entityManager.persist(new Member(null, 100));
+             entityManager.persist(new Member("member5", 100));
+             entityManager.persist(new Member("member6", 100));
+         
+             List<Member> result = jpaQueryFactory
+                     .selectFrom(member)
+                     .where(member.age.eq(100))
+                     .orderBy(
+                             member.age.desc(),
+                             member.username.asc().nullsLast()
+                     )
+                     .fetch();
+         
+             assertThat(result.size()).isEqualTo(3);
+             Member member5 = result.get(0);
+             Member member6 = result.get(1);
+             Member memberNull = result.get(2); //nullsLast() 옵션 때문에 사용자이름이 null이면 마지막
+         
+             assertThat(member5.getUsername()).isEqualTo("member5");
+             assertThat(member6.getUsername()).isEqualTo("member6");
+             assertThat(memberNull.getUsername()).isNull();
+         }
+         ```
 
    - 페이징
 

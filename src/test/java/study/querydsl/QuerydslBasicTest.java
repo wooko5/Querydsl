@@ -28,6 +28,7 @@ public class QuerydslBasicTest {
 
     @BeforeEach
     public void before() {
+        jpaQueryFactory = new JPAQueryFactory(entityManager);
         Team teamA = new Team("teamA");
         Team teamB = new Team("teamB");
         entityManager.persist(teamA);
@@ -56,7 +57,6 @@ public class QuerydslBasicTest {
 
     @Test
     public void startQuerydslV1() {
-        jpaQueryFactory = new JPAQueryFactory(entityManager);
         QMember qMember = new QMember("test"); //variable은 alias(별칭)를 의미(같은 테이블을 조인해서 alias룰 다르게 설정할 때 필요!!!
 
         Member foundMember = jpaQueryFactory
@@ -70,8 +70,6 @@ public class QuerydslBasicTest {
 
     @Test
     public void startQuerydslV2() {
-        jpaQueryFactory = new JPAQueryFactory(entityManager);
-
         Member foundMember = jpaQueryFactory
                 .select(member)
                 .from(member)
@@ -83,8 +81,6 @@ public class QuerydslBasicTest {
 
     @Test
     public void search() {
-        jpaQueryFactory = new JPAQueryFactory(entityManager);
-
         Member foundMember = jpaQueryFactory
                 .selectFrom(member)
                 .where(member.username.eq("member1")
@@ -95,8 +91,6 @@ public class QuerydslBasicTest {
 
     @Test
     public void searchBetween() {
-        jpaQueryFactory = new JPAQueryFactory(entityManager);
-
         List<Member> foundMember = jpaQueryFactory
                 .selectFrom(member)
                 .where(member.age.between(10, 30))
@@ -106,8 +100,6 @@ public class QuerydslBasicTest {
 
     @Test
     public void searchAndParam() {
-        jpaQueryFactory = new JPAQueryFactory(entityManager);
-
         Member foundMember = jpaQueryFactory
                 .selectFrom(member)
                 .where(
@@ -120,8 +112,6 @@ public class QuerydslBasicTest {
 
     @Test
     public void resultFetch() {
-        jpaQueryFactory = new JPAQueryFactory(entityManager);
-
 //        List<Member> fetch = jpaQueryFactory
 //                .selectFrom(member)
 //                .fetch();
@@ -150,7 +140,27 @@ public class QuerydslBasicTest {
      * 단 2에서 회원 이름이 없으면 마지막에 출력(nulls last)
      */
     @Test
-    public void sort(){
+    public void sort() {
+        entityManager.persist(new Member(null, 100));
+        entityManager.persist(new Member("member5", 100));
+        entityManager.persist(new Member("member6", 100));
 
+        List<Member> result = jpaQueryFactory
+                .selectFrom(member)
+                .where(member.age.eq(100))
+                .orderBy(
+                        member.age.desc(),
+                        member.username.asc().nullsLast()
+                )
+                .fetch();
+
+        assertThat(result.size()).isEqualTo(3);
+        Member member5 = result.get(0);
+        Member member6 = result.get(1);
+        Member memberNull = result.get(2); //nullsLast() 옵션 때문에 사용자이름이 null이면 마지막
+
+        assertThat(member5.getUsername()).isEqualTo("member5");
+        assertThat(member6.getUsername()).isEqualTo("member6");
+        assertThat(memberNull.getUsername()).isNull();
     }
 }
