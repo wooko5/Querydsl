@@ -4,7 +4,9 @@ import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.PersistenceUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -27,6 +29,9 @@ public class QuerydslBasicTest {
     EntityManager entityManager; //EntityManager는 멀티쓰레드 환경에서도 사용가능
 
     JPAQueryFactory jpaQueryFactory; //JPAQueryFactory를 필드로 선언해도 멀티쓰레드 환경(동시성 문제)에서도 사용가능
+
+    @PersistenceUnit
+    EntityManagerFactory entityManagerFactory;
 
     @BeforeEach
     public void before() {
@@ -259,5 +264,77 @@ public class QuerydslBasicTest {
         assertThat(result)
                 .extracting("username")
                 .containsExactly("teamA", "teamB");
+    }
+
+    /**
+     * 회원과 팀을 조인하면서, 팀 이름이 teamA인 팀만 조인, 회원은 모두 조회
+     * inner join이면 where문을 이용하고,
+     * 어쩔 수 없이 outer join을 써야하는 경우에만 'on'을 사용하자
+     */
+    @Test
+    public void joinOnFiltering() {
+        List<Tuple> result = jpaQueryFactory
+                .select(member, team)
+                .from(member)
+                .leftJoin(member.team, team)
+                .on(team.name.eq("teamA")) //on을 정해주지 않으면 member.team.id(FK) = team.id(PK)를 사용
+//                .join(member.team, team) //해당 절과 똑같음
+//                .where(team.name.eq("teamA"))
+                .fetch();
+
+        result.forEach(System.out::println);
+    }
+
+    /**
+     * 연관관계가 없는 엔티티 외부 조인
+     * 회원의 이름이 팀 이름과 같은 대상을 외부 조인
+     */
+    @Test
+    public void joinOnNoRelation() {
+        entityManager.persist(new Member("teamA"));
+        entityManager.persist(new Member("teamB"));
+        entityManager.persist(new Member("teamC"));
+
+        List<Tuple> result = jpaQueryFactory
+                .select(member, team)
+                .from(member)
+//                .leftJoin(member.team, team) //member의 teamId와 team의 teamId를 기준으로 join
+                .leftJoin(team).on(member.username.eq(team.name)) // 회원 이름과 팀 이름으로만 left-join
+//                .join(team).on(member.username.eq(team.name)) // 회원 이름과 팀 이름으로만 inner-join
+                .fetch();
+
+        result.forEach(System.out::println);
+    }
+
+    @Test
+    public void noFetchJoin() {
+        entityManager.flush();
+        entityManager.clear();
+
+        Member foundMember = jpaQueryFactory
+                .selectFrom(member)
+                .where(member.username.eq("member1"))
+                .fetchOne();
+        assert foundMember != null;
+        boolean loaded = entityManagerFactory.getPersistenceUnitUtil().isLoaded(foundMember.getTeam());
+        assertThat(loaded).as("페치 조인 미적용").isFalse();
+
+    }
+
+    @Test
+    public void fetchJoin() {
+        entityManager.flush();
+        entityManager.clear();
+
+        Member foundMember = jpaQueryFactory
+                .selectFrom(member)
+                .join(member.team, team)
+                .fetchJoin()
+                .where(member.username.eq("member1"))
+                .fetchOne();
+
+        assert foundMember != null;
+        boolean loaded = entityManagerFactory.getPersistenceUnitUtil().isLoaded(foundMember.getTeam());
+        assertThat(loaded).as("페치 조인 적용").isTrue();
     }
 }

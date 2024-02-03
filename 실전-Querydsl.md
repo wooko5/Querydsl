@@ -372,32 +372,93 @@
 
      - 기본조인
 
-       - 코드
-
-         - ```java
-           /**
-           * 세타 조인(연관관계가 없는 필드로 조인)
-           * 회원의 이름이 팀 이름과 같은 회원 조회
-           * 즉, 모든 회원과 팀의 모든 데이터를 조인해서(catesian)
-           * where절의 조건으로 필터링 하는 조인
-           */
-           @Test
-           public void thetaJoin() {
-               entityManager.persist(new Member("teamA"));
-               entityManager.persist(new Member("teamB"));
-               List<Member> result = jpaQueryFactory
-                       .select(member)
-                       .from(member, team).where(member.username.eq(team.name))
-                       .fetch();
-               assertThat(result)
-                       .extracting("username")
-                       .containsExactly("teamA", "teamB");
-           }
-           ```
+       - ```java
+         /**
+         * 세타 조인(연관관계가 없는 필드로 조인)
+         * 회원의 이름이 팀 이름과 같은 회원 조회
+         * 즉, 모든 회원과 팀의 모든 데이터를 조인해서(catesian)
+         * where절의 조건으로 필터링 하는 조인
+         */
+         @Test
+         public void thetaJoin() {
+             entityManager.persist(new Member("teamA"));
+             entityManager.persist(new Member("teamB"));
+             List<Member> result = jpaQueryFactory
+                     .select(member)
+                     .from(member, team).where(member.username.eq(team.name))
+                     .fetch();
+             assertThat(result)
+                     .extracting("username")
+                     .containsExactly("teamA", "teamB");
+         }
+         ```
 
      - ON 절
 
-     - Fetch 조인
+       - ```java
+         /**
+         * 회원과 팀을 조인하면서, 팀 이름이 teamA인 팀만 조인, 회원은 모두 조회
+         * inner join이면 where문을 이용하고, 
+         * 어쩔 수 없이 outer join을 써야하는 경우에만 'on'을 사용하자 
+         */
+         @Test
+         public void joinOnFiltering() {
+             List<Tuple> result = jpaQueryFactory
+                     .select(member, team)
+                     .from(member)
+                     .leftJoin(member.team, team)
+                     .on(team.name.eq("teamA")) //on을 정해주지 않으면 member.team.id(FK) = team.id(PK)를 사용
+         //                .join(member.team, team) //해당 절과 똑같음
+         //                .where(team.name.eq("teamA"))
+                     .fetch();
+         
+             result.forEach(System.out::println);
+         }
+         ```
+
+       - TIP
+
+         - `inner join이면 where문을 이용하고, outer join을 써야하는 경우에만 'on'을 사용`
+
+       - 주의
+
+         - 일반조인
+           - `leftJoin(member.team, team)`
+         - on조인
+           - `leftJoin(team).on(member.username.eq(team.name))`
+
+     - Fetch 조인 ***
+
+       - 개념
+
+         - `즉시 로딩으로 Member, Team SQL 쿼리 조인으로 한번에 조회`
+
+       - 사용법
+
+         - join(), leftJoin() 등 조인 기능 뒤에 fetchJoin() 이라고 추가 (매우 간단)
+
+       - 코드
+
+         - ```java
+           @Test
+           public void fetchJoin() {
+               entityManager.flush();
+               entityManager.clear();
+           
+               Member foundMember = jpaQueryFactory
+                       .selectFrom(member)
+                       .join(member.team, team)
+                       .fetchJoin()
+                       .where(member.username.eq("member1"))
+                       .fetchOne();
+           
+               assert foundMember != null;
+               boolean loaded = entityManagerFactory.getPersistenceUnitUtil().isLoaded(foundMember.getTeam());
+               assertThat(loaded).as("페치 조인 적용").isTrue();
+           }
+           ```
+
+           
 
    - 서브쿼리
 
