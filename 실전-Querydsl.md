@@ -371,7 +371,32 @@
    - 조인
 
      - 기본조인
+
+       - 코드
+
+         - ```java
+           /**
+           * 세타 조인(연관관계가 없는 필드로 조인)
+           * 회원의 이름이 팀 이름과 같은 회원 조회
+           * 즉, 모든 회원과 팀의 모든 데이터를 조인해서(catesian)
+           * where절의 조건으로 필터링 하는 조인
+           */
+           @Test
+           public void thetaJoin() {
+               entityManager.persist(new Member("teamA"));
+               entityManager.persist(new Member("teamB"));
+               List<Member> result = jpaQueryFactory
+                       .select(member)
+                       .from(member, team).where(member.username.eq(team.name))
+                       .fetch();
+               assertThat(result)
+                       .extracting("username")
+                       .containsExactly("teamA", "teamB");
+           }
+           ```
+
      - ON 절
+
      - Fetch 조인
 
    - 서브쿼리

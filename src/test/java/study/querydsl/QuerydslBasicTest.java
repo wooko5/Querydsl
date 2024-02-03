@@ -223,4 +223,41 @@ public class QuerydslBasicTest {
         assertThat(teamA.get(member.age.avg())).isEqualTo(15);
         assertThat(teamB.get(member.age.avg())).isEqualTo(35);
     }
+
+    /**
+     * 팀 A에 소속된 모든 직원(join)
+     */
+    @Test
+    public void basicJoin() {
+        List<Member> result = jpaQueryFactory
+                .selectFrom(member)
+//                .join(member.team, team) //inner join
+                .leftJoin(member.team, team)
+//                .rightJoin(member.team, team)
+                .where(team.name.eq("teamA"))
+                .fetch();
+
+        assertThat(result)
+                .extracting("username")
+                .containsExactly("member1", "member2");
+    }
+
+    /**
+     * 세타 조인(연관관계가 없는 필드로 조인)
+     * 회원의 이름이 팀 이름과 같은 회원 조회
+     * 즉, 모든 회원과 팀의 모든 데이터를 조인해서(catesian)
+     * where절의 조건으로 필터링 하는 조인
+     */
+    @Test
+    public void thetaJoin() {
+        entityManager.persist(new Member("teamA"));
+        entityManager.persist(new Member("teamB"));
+        List<Member> result = jpaQueryFactory
+                .select(member)
+                .from(member, team).where(member.username.eq(team.name))
+                .fetch();
+        assertThat(result)
+                .extracting("username")
+                .containsExactly("teamA", "teamB");
+    }
 }
