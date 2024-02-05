@@ -458,9 +458,62 @@
            }
            ```
 
-           
-
    - 서브쿼리
+
+     - 코드
+
+       - ```java
+         import static com.querydsl.jpa.JPAExpressions.select;
+         
+         /**
+         * 나이가 평균 이상인 회원을 조회
+         */
+         @Test
+         @DisplayName("서브쿼리 테스트 - 나이가 평균 이상인 회원을 조회")
+         public void subQueryV2() {
+             QMember memberSub = new QMember("memberSub");
+         
+             List<Member> result = jpaQueryFactory
+                     .selectFrom(member)
+                     .where(member.age.goe( //goe는 '>='를 의미
+                             //subQuery 부분
+                             select(memberSub.age.avg())
+                                     .from(memberSub)
+                     ))
+                     .fetch();
+         
+             assertThat(result).extracting("age").containsExactly(30, 40);
+         }
+         ```
+
+     - TIP
+
+       - gt : >
+       - goe : >=
+       - lt : <
+       - loe <=
+
+     - JPA JPQL 서브쿼리의 한계
+
+       - ```
+         JPA JPQL 서브쿼리의 한계점으로 from 절의 서브쿼리(인라인 뷰)는 지원하지 않는다. 
+         당연히 Querydsl도 지원하지 않는다. 
+         하이버네이트 구현체를 사용하면 select 절의 서브쿼리는 지원한다. 
+         Querydsl도 하이버네이트 구현체를 사용하면 select 절의 서브쿼리를 지원한다.
+         ```
+
+     - 3가지 해결방법
+
+       - 서브쿼리를 join으로 변경한다.
+         - 가능한 상황도 있고, 불가능한 상황도 있다.
+       - 애플리케이션에서 쿼리를 2~3번 분리해서 실행한다.
+       - nativeSQL을 사용한다.
+
+     - TIP
+
+       - 개발하다보면 화면이나 특정 로직에서 원하는 데이터 형태를 맞추기 위해서 어쩔 수 없이 from절에 서브쿼리를 넣는 경우가 생김
+       - 그러나 DB는 데이터만 필터링/그룹핑만 해서 가져오고 로직이나 화면 맞춤용 데이터는 해당 레이어에서 수정하도록 하는 것을 권장
+         - DB는 최대한 데이터를 가져오는 용도로만 사용하길 추천
 
    - Case문
 

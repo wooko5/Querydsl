@@ -8,6 +8,7 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.PersistenceUnit;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +18,7 @@ import study.querydsl.entity.Team;
 
 import java.util.List;
 
+import static com.querydsl.jpa.JPAExpressions.select;
 import static org.assertj.core.api.Assertions.assertThat;
 import static study.querydsl.entity.QMember.member;
 import static study.querydsl.entity.QTeam.team;
@@ -53,6 +55,7 @@ public class QuerydslBasicTest {
     }
 
     @Test
+    @DisplayName("기존 JPQL 테스트")
     public void startJPQL() {
         Member foundMember = entityManager.createQuery(
                         "select m from Member m where m.username = :username", Member.class
@@ -63,6 +66,7 @@ public class QuerydslBasicTest {
     }
 
     @Test
+    @DisplayName("Querydsl V1 테스트")
     public void startQuerydslV1() {
         QMember qMember = new QMember("test"); //variable은 alias(별칭)를 의미(같은 테이블을 조인해서 alias룰 다르게 설정할 때 필요!!!
 
@@ -76,6 +80,7 @@ public class QuerydslBasicTest {
     }
 
     @Test
+    @DisplayName("Querydsl V2 테스트")
     public void startQuerydslV2() {
         Member foundMember = jpaQueryFactory
                 .select(member)
@@ -87,6 +92,7 @@ public class QuerydslBasicTest {
     }
 
     @Test
+    @DisplayName("단건 조회 테스트")
     public void search() {
         Member foundMember = jpaQueryFactory
                 .selectFrom(member)
@@ -97,6 +103,7 @@ public class QuerydslBasicTest {
     }
 
     @Test
+    @DisplayName("Between1 테스트")
     public void searchBetween() {
         List<Member> foundMember = jpaQueryFactory
                 .selectFrom(member)
@@ -106,6 +113,7 @@ public class QuerydslBasicTest {
     }
 
     @Test
+    @DisplayName("Between2 테스트")
     public void searchAndParam() {
         Member foundMember = jpaQueryFactory
                 .selectFrom(member)
@@ -118,6 +126,7 @@ public class QuerydslBasicTest {
     }
 
     @Test
+    @DisplayName("fetchResults 테스트 - deprecated")
     public void resultFetch() {
 //        List<Member> fetch = jpaQueryFactory
 //                .selectFrom(member)
@@ -147,6 +156,7 @@ public class QuerydslBasicTest {
      * 단 2에서 회원 이름이 없으면 마지막에 출력(nulls last)
      */
     @Test
+    @DisplayName("sorting 테스트")
     public void sort() {
         entityManager.persist(new Member(null, 100));
         entityManager.persist(new Member("member5", 100));
@@ -172,6 +182,7 @@ public class QuerydslBasicTest {
     }
 
     @Test
+    @DisplayName("paging 테스트")
     public void pagingV1() {
         List<Member> result = jpaQueryFactory
                 .selectFrom(member)
@@ -188,6 +199,7 @@ public class QuerydslBasicTest {
      * DTO로 바로 조회하는 방법을 더 많이 쓴다
      */
     @Test
+    @DisplayName("aggregation 테스트")
     public void aggregation() {
         List<Tuple> result = jpaQueryFactory
                 .select(
@@ -211,6 +223,7 @@ public class QuerydslBasicTest {
      * 팀명과 각 팀의 평균 연령을 구하는 테스트
      */
     @Test
+    @DisplayName("groupBy 테스트")
     public void groupBy() {
         List<Tuple> result = jpaQueryFactory
                 .select(team.name, member.age.avg())
@@ -233,6 +246,7 @@ public class QuerydslBasicTest {
      * 팀 A에 소속된 모든 직원(join)
      */
     @Test
+    @DisplayName("일반 join 테스트")
     public void basicJoin() {
         List<Member> result = jpaQueryFactory
                 .selectFrom(member)
@@ -254,6 +268,7 @@ public class QuerydslBasicTest {
      * where절의 조건으로 필터링 하는 조인
      */
     @Test
+    @DisplayName("세타 조인(연관관계가 없는 필드로 조인) 테스트")
     public void thetaJoin() {
         entityManager.persist(new Member("teamA"));
         entityManager.persist(new Member("teamB"));
@@ -272,6 +287,7 @@ public class QuerydslBasicTest {
      * 어쩔 수 없이 outer join을 써야하는 경우에만 'on'을 사용하자
      */
     @Test
+    @DisplayName("join의 on 테스트")
     public void joinOnFiltering() {
         List<Tuple> result = jpaQueryFactory
                 .select(member, team)
@@ -290,6 +306,7 @@ public class QuerydslBasicTest {
      * 회원의 이름이 팀 이름과 같은 대상을 외부 조인
      */
     @Test
+    @DisplayName("연관관계가 없는 엔티티 외부 조인 테스트")
     public void joinOnNoRelation() {
         entityManager.persist(new Member("teamA"));
         entityManager.persist(new Member("teamB"));
@@ -307,6 +324,7 @@ public class QuerydslBasicTest {
     }
 
     @Test
+    @DisplayName("noFetchJoin 테스트")
     public void noFetchJoin() {
         entityManager.flush();
         entityManager.clear();
@@ -322,6 +340,7 @@ public class QuerydslBasicTest {
     }
 
     @Test
+    @DisplayName("fetchJoin 테스트")
     public void fetchJoin() {
         entityManager.flush();
         entityManager.clear();
@@ -336,5 +355,82 @@ public class QuerydslBasicTest {
         assert foundMember != null;
         boolean loaded = entityManagerFactory.getPersistenceUnitUtil().isLoaded(foundMember.getTeam());
         assertThat(loaded).as("페치 조인 적용").isTrue();
+    }
+
+    /**
+     * 나이가 가장 많은 회원을 조회
+     */
+    @Test
+    @DisplayName("서브쿼리 테스트 - 나이가 가장 많은 회원을 조회")
+    public void subQueryV1() {
+        QMember memberSub = new QMember("memberSub");
+
+        List<Member> result = jpaQueryFactory
+                .selectFrom(member)
+                .where(member.age.eq(
+                        //subQuery 부분
+                        select(memberSub.age.max())
+                                .from(memberSub)
+                ))
+                .fetch();
+
+        assertThat(result).extracting("age").containsExactly(40);
+    }
+
+    /**
+     * 나이가 평균 이상인 회원을 조회
+     */
+    @Test
+    @DisplayName("서브쿼리 테스트 - 나이가 평균 이상인 회원을 조회")
+    public void subQueryV2() {
+        QMember memberSub = new QMember("memberSub");
+
+        List<Member> result = jpaQueryFactory
+                .selectFrom(member)
+                .where(member.age.goe( //goe는 '>='를 의미
+                        //subQuery 부분
+                        select(memberSub.age.avg())
+                                .from(memberSub)
+                ))
+                .fetch();
+
+        assertThat(result).extracting("age").containsExactly(30, 40);
+    }
+
+    /**
+     * 나이가 10살보다 많은 회원을 모두(in) 조회
+     */
+    @Test
+    @DisplayName("서브쿼리 테스트 - 나이가 10살보다 많은 회원을 모두(in) 조회")
+    public void subQueryV3() {
+        QMember memberSub = new QMember("memberSub");
+
+        List<Member> result = jpaQueryFactory
+                .selectFrom(member)
+                .where(member.age.in(
+                        //subQuery 부분
+                        select(memberSub.age)
+                                .from(memberSub)
+                                .where(memberSub.age.gt(10))
+                ))
+                .fetch();
+
+        assertThat(result).extracting("age").containsExactly(20, 30, 40);
+    }
+
+    @Test
+    public void selectSubQuery() {
+        QMember memberSub = new QMember("memberSub");
+
+        List<Tuple> result = jpaQueryFactory
+                .select(member.username,
+                        select(memberSub.age.avg())
+                                .from(memberSub))
+                .from(member)
+                .fetch();
+
+        for (Tuple tuple : result) {
+            System.out.println("tuple == " + tuple);
+        }
     }
 }
