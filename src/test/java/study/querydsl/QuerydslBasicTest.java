@@ -2,6 +2,8 @@ package study.querydsl;
 
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -361,8 +363,8 @@ public class QuerydslBasicTest {
      * 나이가 가장 많은 회원을 조회
      */
     @Test
-    @DisplayName("서브쿼리 테스트 - 나이가 가장 많은 회원을 조회")
-    public void subQueryV1() {
+    @DisplayName("서브쿼리 테스트 - 나이가 가장 많은(eq, max) 회원을 조회")
+    public void subQueryEq() {
         QMember memberSub = new QMember("memberSub");
 
         List<Member> result = jpaQueryFactory
@@ -381,8 +383,8 @@ public class QuerydslBasicTest {
      * 나이가 평균 이상인 회원을 조회
      */
     @Test
-    @DisplayName("서브쿼리 테스트 - 나이가 평균 이상인 회원을 조회")
-    public void subQueryV2() {
+    @DisplayName("서브쿼리 테스트 - 나이가 평균 이상인(goe) 회원을 조회")
+    public void subQueryGoe() {
         QMember memberSub = new QMember("memberSub");
 
         List<Member> result = jpaQueryFactory
@@ -402,7 +404,7 @@ public class QuerydslBasicTest {
      */
     @Test
     @DisplayName("서브쿼리 테스트 - 나이가 10살보다 많은 회원을 모두(in) 조회")
-    public void subQueryV3() {
+    public void subQueryIn() {
         QMember memberSub = new QMember("memberSub");
 
         List<Member> result = jpaQueryFactory
@@ -419,6 +421,7 @@ public class QuerydslBasicTest {
     }
 
     @Test
+    @DisplayName("select 절에 subquery 테스트")
     public void selectSubQuery() {
         QMember memberSub = new QMember("memberSub");
 
@@ -431,6 +434,64 @@ public class QuerydslBasicTest {
 
         for (Tuple tuple : result) {
             System.out.println("tuple == " + tuple);
+        }
+    }
+
+    @Test
+    @DisplayName("단순한 조건 case when 테스트")
+    public void basicCase(){
+        List<String> result = jpaQueryFactory
+                .select(member.age
+                        .when(10).then("열살")
+                        .when(20).then("스무살")
+                        .otherwise("기타"))
+                .from(member)
+                .fetch();
+
+        for(String s : result){
+            System.out.println("result == " + s);
+        }
+    }
+
+    @Test
+    @DisplayName("복잡한 조건 case when 테스트")
+    public void complexCase(){
+        List<String> result = jpaQueryFactory
+                .select(new CaseBuilder()
+                        .when(member.age.between(0, 20)).then("0 ~ 20살")
+                        .when(member.age.between(21, 30)).then("21 ~ 30살")
+                        .otherwise("기타"))
+                .from(member)
+                .fetch();
+
+        for(String s : result){
+            System.out.println("result == " + s);
+        }
+    }
+
+    @Test
+    @DisplayName("select 문에 상수를 넣는 테스트")
+    public void constant(){
+        List<Tuple> result = jpaQueryFactory
+                .select(member.username, Expressions.constant("A"))
+                .from(member)
+                .fetch();
+
+        for(Tuple tuple : result){
+            System.out.println("tuple == " + tuple);
+        }
+    }
+
+    @Test
+    @DisplayName("select 문에 원하는 문자열을 합성해서 넣는 테스트")
+    public void concat(){
+        List<String> result = jpaQueryFactory
+                .select(member.username.concat("_").concat(member.age.stringValue())) //{username_age}, stringValue()를 안 하면 타입에러가 발생
+                .from(member)
+                .fetch();
+
+        for(String s : result){
+            System.out.println("s == " + s);
         }
     }
 }
