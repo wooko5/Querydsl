@@ -439,7 +439,7 @@ public class QuerydslBasicTest {
 
     @Test
     @DisplayName("단순한 조건 case when 테스트")
-    public void basicCase(){
+    public void basicCase() {
         List<String> result = jpaQueryFactory
                 .select(member.age
                         .when(10).then("열살")
@@ -448,14 +448,14 @@ public class QuerydslBasicTest {
                 .from(member)
                 .fetch();
 
-        for(String s : result){
+        for (String s : result) {
             System.out.println("result == " + s);
         }
     }
 
     @Test
     @DisplayName("복잡한 조건 case when 테스트")
-    public void complexCase(){
+    public void complexCase() {
         List<String> result = jpaQueryFactory
                 .select(new CaseBuilder()
                         .when(member.age.between(0, 20)).then("0 ~ 20살")
@@ -464,34 +464,59 @@ public class QuerydslBasicTest {
                 .from(member)
                 .fetch();
 
-        for(String s : result){
+        for (String s : result) {
             System.out.println("result == " + s);
         }
     }
 
     @Test
     @DisplayName("select 문에 상수를 넣는 테스트")
-    public void constant(){
+    public void constant() {
         List<Tuple> result = jpaQueryFactory
                 .select(member.username, Expressions.constant("A"))
                 .from(member)
                 .fetch();
 
-        for(Tuple tuple : result){
+        for (Tuple tuple : result) {
             System.out.println("tuple == " + tuple);
         }
     }
 
     @Test
     @DisplayName("select 문에 원하는 문자열을 합성해서 넣는 테스트")
-    public void concat(){
+    public void concat() {
         List<String> result = jpaQueryFactory
                 .select(member.username.concat("_").concat(member.age.stringValue())) //{username_age}, stringValue()를 안 하면 타입에러가 발생
                 .from(member)
                 .fetch();
 
-        for(String s : result){
+        for (String s : result) {
             System.out.println("s == " + s);
+        }
+    }
+
+    @Test
+    @DisplayName("프로젝션 대상이 하나 테스트")
+    public void simpleProjection() {
+        List<String> result = jpaQueryFactory
+                .select(member.username)
+                .from(member)
+                .fetch();
+        for (String res : result) {
+            System.out.println(res);
+        }
+    }
+
+    @Test
+    @DisplayName("프로젝션 대상이 둘 이상 테스트")
+    public void tupleProjection() {
+        List<Tuple> result = jpaQueryFactory
+                .select(member.username, member.age)
+                .from(member)
+                .fetch();
+        for (Tuple tuple : result) {
+            System.out.println("username == " + tuple.get(member.username));
+            System.out.println("age == " + tuple.get(member.age));
         }
     }
 }

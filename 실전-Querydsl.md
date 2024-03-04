@@ -543,12 +543,18 @@
                .fetch();
            ```
 
-           
-
      - 프로젝션 대상이 둘 이상
 
        - 튜플
        - DTO
+
+     - Tuple - 튜플
+
+       - 주의
+         - tuple은 `package com.querydsl.core` 패키지에 소속되어 있기에 repository에서 사용하는 것을 권장하고,  service or controller에서 사용하는 것은 비추천
+         - QueryDsl를 사용하는 것을 굳이 repository가 아닌 앞단(핵심 비즈니스 로직, 컨트롤러)에서 알 필요가 없기 때문
+         - 나중에 QueryDsl을 다른 기술로 전환해도 비용이 적기 때문
+         - 앞단에서 사용하는 건 DTO 조회를 추천
 
    - 프로젝션과 결과 반환 - DTO 조회
 
