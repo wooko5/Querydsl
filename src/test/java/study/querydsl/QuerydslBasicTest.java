@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 import study.querydsl.dto.MemberDto;
+import study.querydsl.dto.QMemberDto;
 import study.querydsl.dto.UserDto;
 import study.querydsl.entity.Member;
 import study.querydsl.entity.QMember;
@@ -608,7 +609,6 @@ public class QuerydslBasicTest {
     @Test
     @DisplayName("별칭이 다를 때, 생성자 사용 DTO 조회 테스트")
     public void findUserDtoByConstructor() {
-        QMember subMember = new QMember("memberSub");
         List<UserDto> result = jpaQueryFactory
                 .select(Projections.constructor(UserDto.class,
                         member.username,
@@ -617,6 +617,24 @@ public class QuerydslBasicTest {
                 .fetch(); // 생성자 argument 순서에 맞게 들어오기만 하면 되기 때문에 성공
 
         for (UserDto dto : result) {
+            System.out.println("DTO == " + dto);
+        }
+    }
+
+    /**
+     * argument를 잘못 입력하면 컴파일러로 타입을 체크할 수 있으므로 가장 안전한 방법
+     * 다만 DTO에 QueryDSL 어노테이션을 유지해야 하는 점과 DTO까지 Q파일을 생성해야 하는 단점이 있음
+     * Projections.constructor은 argument를 잘못 입력해도 컴파일 오류가 발생하지 않고 runtime 오류가 발생
+     */
+    @Test
+    @DisplayName("@QueryProjection의 DTO 조회 테스트")
+    public void findDtoByQueryProjection() {
+        List<MemberDto> result = jpaQueryFactory
+                .select(new QMemberDto(member.username, member.age))
+                .from(member)
+                .fetch(); // @QueryProjection이 선언된 생성자 argument 순서에 맞게 들어오기만 하면 성공
+
+        for (MemberDto dto : result) {
             System.out.println("DTO == " + dto);
         }
     }

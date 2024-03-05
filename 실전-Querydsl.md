@@ -585,6 +585,7 @@
          - `Projections.fields`: getter, setter가 없어도 되는 방식
        - 생성자 사용
          - `Projections.constructor`: 생성자의 argument 순서와 select문의 column 순서가 일치해야함(위반 시, 오류)
+         - 단점: argument 순서가 맞지 않으면 compile 오류로는 못 잡고, runtime 오류로만 찾을 수 있음
 
      - 별칭이 다를 때
 
@@ -593,11 +594,45 @@
    - 프로젝션과 결과 반환 - @QueryProjection
 
      - 생성자 + @QueryProjection
-     - @QueryProjection 활용
-     - distinct
-     - 단점
+
+       - ```java
+         @Data
+         @NoArgsConstructor
+         public class MemberDto {
+         
+             private String username;
+             private int age;
+         
+             @QueryProjection // 어노테이션 선언 후, gradle의 clean => build를 해주면 generated 폴더에 dto 생성
+             public MemberDto(String username, int age) {
+                 this.username = username;
+                 this.age = age;
+             }
+         }
+         
+         @Test
+         @DisplayName("@QueryProjection의 DTO 조회 테스트")
+         public void findDtoByQueryProjection() {
+             List<MemberDto> result = jpaQueryFactory
+                 .select(new QMemberDto(member.username, member.age))
+                 .from(member)
+                 .fetch(); // @QueryProjection이 선언된 생성자 argument 순서에 맞게 들어오기만 하면 성공
+             
+             for (MemberDto dto : result) {
+                 System.out.println("DTO == " + dto);
+             }
+         }
+         ```
+         
+       - 단점
+
+         - **DTO에 어노테이션이 붙기 때문에 controller, service, repository layer에서 모두 쓰이는 DTO는 순수함(오직 데이터를 옮기는 객체로서의 역할)을 유지할 필요가 있는데 어노테이션을 선언하는 순간 QueryDSL에 의존성이 발생**
+         - DTO까지 Q파일을 생성해야 하는 단점이 있음
 
    - 동적쿼리 - BooleanBuilder
+
+     - BooleanBuilder
+     - Where 다중 파라미터 사용
 
    - 동적쿼리 - Where 다중 파라미터
 
