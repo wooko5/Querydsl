@@ -558,7 +558,44 @@
 
    - 프로젝션과 결과 반환 - DTO 조회
 
+     - 순수 JPA에서 DTO 조회 단점
+
+       - 순수 JPA에서 DTO를 조회할 때는 new 명령어를 사용해야함
+
+       - DTO의 package이름을 다 적어줘야해서 지저분함
+
+       - 생성자 방식만 지원함
+
+       - ```java
+         @Test
+         @DisplayName("순수 JPA에서 DTO 조회 테스트")
+         public void findDtoByJPQL() {
+             List<MemberDto> result = entityManager.createQuery(
+                             "select new study.querydsl.dto.MemberDto(m.username, m.age) from Member m",
+                             MemberDto.class
+                     ).getResultList();
+         }
+         ```
+
+     - QueryDsl Bean 생성(Bean population)
+
+       - 프로퍼티 접근 - Setter
+         - `Projections.bean`: DTO에 @NoArgsConstructor를 선언해야함. 왜냐하면 기본 생성자를 이용하기 때문
+       - 필드 직접 접근
+         - `Projections.fields`: getter, setter가 없어도 되는 방식
+       - 생성자 사용
+         - `Projections.constructor`: 생성자의 argument 순서와 select문의 column 순서가 일치해야함(위반 시, 오류)
+
+     - 별칭이 다를 때
+
+       - 예를 들어, member.username는 UserDto.name과 매칭이 안 되기 때문 as를 사용
+
    - 프로젝션과 결과 반환 - @QueryProjection
+
+     - 생성자 + @QueryProjection
+     - @QueryProjection 활용
+     - distinct
+     - 단점
 
    - 동적쿼리 - BooleanBuilder
 

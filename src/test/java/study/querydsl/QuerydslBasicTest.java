@@ -2,8 +2,11 @@ package study.querydsl;
 
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -14,6 +17,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
+import study.querydsl.dto.MemberDto;
+import study.querydsl.dto.UserDto;
 import study.querydsl.entity.Member;
 import study.querydsl.entity.QMember;
 import study.querydsl.entity.Team;
@@ -517,6 +522,102 @@ public class QuerydslBasicTest {
         for (Tuple tuple : result) {
             System.out.println("username == " + tuple.get(member.username));
             System.out.println("age == " + tuple.get(member.age));
+        }
+    }
+
+    @Test
+    @DisplayName("순수 JPA에서 DTO 조회 테스트")
+    public void findDtoByJPQL() {
+        List<MemberDto> result = entityManager.createQuery(
+                        "select new study.querydsl.dto.MemberDto(m.username, m.age) from Member m",
+                        MemberDto.class
+                )
+                .getResultList();
+
+        for (MemberDto dto : result) {
+            System.out.println("DTO의 사용자명 == " + dto.getUsername());
+            System.out.println("DTO의 나이 == " + dto.getAge());
+        }
+    }
+
+    @Test
+    @DisplayName("프로퍼티 접근 - Setter, DTO 조회 테스트")
+    public void findDtoBySetter() {
+        List<MemberDto> result = jpaQueryFactory
+                .select(Projections.bean(MemberDto.class,
+                        member.username,
+                        member.age))
+                .from(member)
+                .fetch(); // MemberDto에 @NoArgsConstructor를 선언해야 테스트 성공
+
+        for (MemberDto dto : result) {
+            System.out.println("DTO == " + dto);
+        }
+    }
+
+    @Test
+    @DisplayName("필드 직접 접근, DTO 조회 테스트")
+    public void findDtoByField() {
+        List<MemberDto> result = jpaQueryFactory
+                .select(Projections.fields(MemberDto.class,
+                        member.username,
+                        member.age))
+                .from(member)
+                .fetch(); // Projections.fields: getter, setter가 없어도 되는 방식
+
+        for (MemberDto dto : result) {
+            System.out.println("DTO == " + dto);
+        }
+    }
+
+    @Test
+    @DisplayName("생성자 사용, DTO 조회 테스트")
+    public void findDtoByConstructor() {
+        List<MemberDto> result = jpaQueryFactory
+                .select(Projections.constructor(MemberDto.class,
+                        member.username,
+                        member.age))
+                .from(member)
+                .fetch(); // 생성자의 argument 순서와 select문의 column 순서가 일치해야함
+
+        for (MemberDto dto : result) {
+            System.out.println("DTO == " + dto);
+        }
+    }
+
+    @Test
+    @DisplayName("별칭이 다를 때, 필드 직접 접근 DTO 조회 테스트")
+    public void findUserDtoByFiled() {
+        QMember subMember = new QMember("memberSub");
+        List<UserDto> result = jpaQueryFactory
+                .select(Projections.fields(UserDto.class,
+                        member.username.as("name"),
+                        ExpressionUtils.as(
+                                JPAExpressions
+                                .select(subMember.age.max())
+                                .from(subMember), "age"
+                        )))
+                .from(member)
+                .fetch(); // member.username는 UserDto.name과 매칭이 안 되기 때문 as를 사용
+
+        for (UserDto dto : result) {
+            System.out.println("DTO == " + dto);
+        }
+    }
+
+    @Test
+    @DisplayName("별칭이 다를 때, 생성자 사용 DTO 조회 테스트")
+    public void findUserDtoByConstructor() {
+        QMember subMember = new QMember("memberSub");
+        List<UserDto> result = jpaQueryFactory
+                .select(Projections.constructor(UserDto.class,
+                        member.username,
+                        member.age))
+                .from(member)
+                .fetch(); // 생성자 argument 순서에 맞게 들어오기만 하면 되기 때문에 성공
+
+        for (UserDto dto : result) {
+            System.out.println("DTO == " + dto);
         }
     }
 }
