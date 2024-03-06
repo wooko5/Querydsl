@@ -632,9 +632,15 @@
    - 동적쿼리 - BooleanBuilder
 
      - BooleanBuilder
-     - Where 다중 파라미터 사용
 
    - 동적쿼리 - Where 다중 파라미터
+
+     - 장점
+       - 실무에서 가장 많이 쓰이는 동적쿼리 방법 by YH
+       - 조합이 가능해서 조건이 다른 2가지 이상의 동적쿼리 조건문을 만들 수 있음
+       - 가독성이 좋아짐, 메서드를 다른 곳에서도 재활용 가능
+     - TODO
+       - BooleanExpression VS Predicate
 
    - 수정, 삭제 벌크 연산
 

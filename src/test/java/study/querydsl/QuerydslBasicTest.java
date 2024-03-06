@@ -1,9 +1,11 @@
 package study.querydsl;
 
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
@@ -595,8 +597,8 @@ public class QuerydslBasicTest {
                         member.username.as("name"),
                         ExpressionUtils.as(
                                 JPAExpressions
-                                .select(subMember.age.max())
-                                .from(subMember), "age"
+                                        .select(subMember.age.max())
+                                        .from(subMember), "age"
                         )))
                 .from(member)
                 .fetch(); // member.username는 UserDto.name과 매칭이 안 되기 때문 as를 사용
@@ -637,5 +639,57 @@ public class QuerydslBasicTest {
         for (MemberDto dto : result) {
             System.out.println("DTO == " + dto);
         }
+    }
+
+    @Test
+    @DisplayName("BooleanBuilder 동적쿼리 테스트")
+    public void dynamicQueryByBooleanBuilder() throws Exception {
+        String usernameParam = "member1";
+        Integer ageParam = null;
+        List<Member> result = searchMemberV1(usernameParam, ageParam);
+        assertThat(result.size()).isEqualTo(1);
+    }
+
+    private List<Member> searchMemberV1(String username, Integer age) {
+        BooleanBuilder builder = new BooleanBuilder();
+        if (username != null) {
+            builder.and(member.username.eq(username));
+        }
+        if (age != null) {
+            builder.and(member.age.eq(age));
+        }
+        return jpaQueryFactory
+                .selectFrom(member)
+                .where(builder)
+                .fetch();
+    }
+
+    @Test
+    @DisplayName("where 다중 조건 동적쿼리 테스트")
+    public void dynamicQueryByWhereMultiParam() throws Exception {
+        String usernameParam = "member1";
+        Integer ageParam = null;
+        List<Member> result = searchMemberV2(usernameParam, ageParam);
+        assertThat(result.size()).isEqualTo(1);
+    }
+
+    private List<Member> searchMemberV2(String username, Integer age) {
+        return jpaQueryFactory
+                .selectFrom(member)
+//                .where(usernameEq(usernameCond), ageEq(ageCond)) //where문에 usernameEq(usernameCond)이 null이면 해당 조건문은 없었던 걸로 취급하기에 동적쿼리 가능
+                .where(usernameAndAgeEq(username, age)) //위의 식과 동일함
+                .fetch();
+    }
+
+    private BooleanExpression usernameEq(String username) {
+        return username != null ? member.username.eq(username) : null;
+    }
+
+    private BooleanExpression ageEq(Integer age) {
+        return age != null ? member.age.eq(age) : null;
+    }
+
+    private BooleanExpression usernameAndAgeEq(String usernameCond, Integer ageCond) {
+        return member.username.eq(usernameCond).and(member.age.eq(ageCond)); //두 조건문을 합쳐서 새로운 조립이 가능(composition)
     }
 }
