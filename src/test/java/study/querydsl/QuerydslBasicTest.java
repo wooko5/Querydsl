@@ -676,8 +676,8 @@ public class QuerydslBasicTest {
     private List<Member> searchMemberV2(String username, Integer age) {
         return jpaQueryFactory
                 .selectFrom(member)
-//                .where(usernameEq(usernameCond), ageEq(ageCond)) //where문에 usernameEq(usernameCond)이 null이면 해당 조건문은 없었던 걸로 취급하기에 동적쿼리 가능
-                .where(usernameAndAgeEq(username, age)) //위의 식과 동일함
+                .where(usernameEq(username), ageEq(age)) //where문에 usernameEq(usernameCond)이 null이면 해당 조건문은 없었던 걸로 취급하기에 동적쿼리 가능
+//                .where(usernameAndAgeEq(username, age)) //위의 식과 동일함
                 .fetch();
     }
 
