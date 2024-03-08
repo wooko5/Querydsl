@@ -243,4 +243,50 @@ public class QuerydslIntermediateTest {
     private BooleanExpression usernameAndAgeEq(String usernameCond, Integer ageCond) {
         return member.username.eq(usernameCond).and(member.age.eq(ageCond)); //두 조건문을 합쳐서 새로운 조립이 가능(composition)
     }
+
+    @Test
+    @DisplayName("수정 벌크 연산 테스트")
+//    @Commit
+    public void bulkUpdate() {
+        long count = jpaQueryFactory
+                .update(member)
+                .set(member.username, "비회원")
+                .where(member.age.lt(28))
+                .execute(); //해당 코드는 영속성 컨텍스트의 상태(1차 캐시)를 신경쓰지 않고 DB에 직접 쿼리를 날림(영속성 컨텍스트 != DB)
+
+        //영속성 컨텍스트와 DB의 정보가 다를 때, 영속성 컨텍스트가 우선권을 가짐
+        entityManager.flush(); //DB와 영속성 컨텍스트 차이를 없애기 위해 flush()로 현재 영속성 컨텍스트 상태를 DB와 동기화
+        entityManager.clear(); //영속성 컨텍스트 상태를 초기화
+
+        assertThat(count).isEqualTo(2);
+
+        List<Member> result = jpaQueryFactory
+                .selectFrom(member)
+                .fetch();
+
+        result.forEach(System.out::println); //DB와 영속성 컨텍스트 차이가 없는지 확인
+    }
+
+    @Test
+    @DisplayName("모든 회원의 나이에 1살 더하기 bulk 테스트")
+    public void bulkAdd() {
+        long count = jpaQueryFactory
+                .update(member)
+                .set(member.age, member.age.add(1)) //만약 한 살 빼고 싶으면 add(-1) 하면 됨
+//                .set(member.age, member.age.multiply(2)) //나이 곱하기 2
+                .execute();
+
+        assertThat(count).isEqualTo(4);
+    }
+
+    @Test
+    @DisplayName("18살 이상의 모든 회원을 삭제 bulk 테스트")
+    public void bulkDelete() {
+        long count = jpaQueryFactory
+                .delete(member)
+                .where(member.age.goe(18))
+                .execute();
+
+        assertThat(count).isEqualTo(3);
+    }
 }
