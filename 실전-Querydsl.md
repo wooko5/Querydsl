@@ -652,6 +652,13 @@
 
    - SQL Function 호출하기
 
+     - 사용
+       - SQL function은 JPA와 같이 Dialect에 등록된 내용만 호출할 수 있음
+       - 예를 들어, H2 DB를 사용한다면 `class H2Dialect`에 등록된 SQL Function만 호출할 수 있음
+       - 만약 내가 만든 SQL function을 호출하고 싶다면, 'H2Dialect' 같은 클래스를 상속받아서 만든 메소드를 application.yml 파일에 등록해야함
+     - TMI
+       - lower 같은 ansi 표준 함수들은 querydsl이 상당부분 내장
+
 5. 실무 활용 - 순수 JPA와 QueryDsl
 
 6. 실무 활용 - 스프링 데이터 JPA와 QueryDsl

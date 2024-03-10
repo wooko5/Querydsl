@@ -5,6 +5,7 @@ import com.querydsl.core.Tuple;
 import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
@@ -289,4 +290,45 @@ public class QuerydslIntermediateTest {
 
         assertThat(count).isEqualTo(3);
     }
+
+    @Test
+    @DisplayName("SQL Function 호출 테스트 - member M으로 변경하는 replace 함수 사용")
+    public void sqlFunctionV1() {
+        List<String> result = jpaQueryFactory
+                .select(
+                        Expressions.stringTemplate(
+                                "function('replace', {0}, {1}, {2})",
+                                member.username, "member", 'M')
+                )
+                .from(member)
+                .fetch();
+
+        result.forEach(System.out::println);
+    }
+
+    @Test
+    @DisplayName("SQL Function 호출 테스트 - 소문자로 변경해서 비교해라.")
+    public void sqlFunctionV2() {
+        List<String> result = jpaQueryFactory
+                .select(member.username)
+                .from(member)
+                .where(member.username.eq(Expressions.stringTemplate("function('lower', {0})", member.username)))
+                .fetch();
+
+        result.forEach(System.out::println);
+    }
+
+    @Test
+    @DisplayName("queryDsl 소문자로 변경 후 비교 테스트") //sqlFunctionV2()와 같지만 ANSI 표준으로 만든 queryDsl 테스트
+    public void comparisonLowercase() {
+        List<String> result = jpaQueryFactory
+                .select(member.username)
+                .from(member)
+                .where(member.username.eq(member.username.lower()))
+                .fetch();
+
+        result.forEach(System.out::println);
+    }
+
+
 }
