@@ -53,20 +53,4 @@ class MemberJpaRepositoryTest {
         List<Member> members2 = memberJpaRepository.findByNameQueryDsl("member1");
         assertThat(members2.get(0).getUsername()).isEqualTo("member1");
     }
-
-    @Test
-    void save() {
-    }
-
-    @Test
-    void findById() {
-    }
-
-    @Test
-    void findAll() {
-    }
-
-    @Test
-    void findByName() {
-    }
 }

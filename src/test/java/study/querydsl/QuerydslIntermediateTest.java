@@ -329,6 +329,4 @@ public class QuerydslIntermediateTest {
 
         result.forEach(System.out::println);
     }
-
-
 }
