@@ -292,7 +292,7 @@
              assertThat(memberNull.getUsername()).isNull();
          }
          ```
-   
+
    - 페이징
 
      - 코드
@@ -309,7 +309,7 @@
              assertThat(result.size()).isEqualTo(2);
          }
          ```
-   
+
    - 집계
 
      - aggregation 코드
@@ -339,7 +339,7 @@
              assertThat(tuple.get(member.age.min())).isEqualTo(10);
          }
          ```
-   
+
      - groupBy 코드
 
        - ```java
@@ -365,7 +365,7 @@
              assertThat(teamB.get(member.age.avg())).isEqualTo(35);
          }
          ```
-   
+
    - 조인
 
      - 기본조인
@@ -390,7 +390,7 @@
                      .containsExactly("teamA", "teamB");
          }
          ```
-   
+
      - ON 절
 
        - ```java
@@ -413,7 +413,7 @@
              result.forEach(System.out::println);
          }
          ```
-   
+
        - TIP
 
          - `inner join이면 where문을 이용하고, outer join을 써야하는 경우에만 'on'을 사용`
@@ -424,7 +424,7 @@
            - `leftJoin(member.team, team)`
          - on조인
            - `leftJoin(team).on(member.username.eq(team.name))`
-   
+
      - Fetch 조인 ***
 
        - 개념
@@ -455,7 +455,7 @@
                assertThat(loaded).as("페치 조인 적용").isTrue();
            }
            ```
-   
+
    - 서브쿼리
 
      - 코드
@@ -483,14 +483,14 @@
              assertThat(result).extracting("age").containsExactly(30, 40);
          }
          ```
-   
+
      - TIP
 
        - gt : >
        - goe : >=
        - lt : <
        - loe <=
-   
+
      - JPA JPQL 서브쿼리의 한계
 
        - ```
@@ -499,30 +499,30 @@
          하이버네이트 구현체를 사용하면 select 절의 서브쿼리는 지원한다. 
          Querydsl도 하이버네이트 구현체를 사용하면 select 절의 서브쿼리를 지원한다.
          ```
-   
+
      - 3가지 해결방법
 
        - 서브쿼리를 join으로 변경한다.
          - 가능한 상황도 있고, 불가능한 상황도 있다.
        - 애플리케이션에서 쿼리를 2~3번 분리해서 실행한다.
        - nativeSQL을 사용한다.
-   
+
      - TIP
 
        - 개발하다보면 화면이나 특정 로직에서 원하는 데이터 형태를 맞추기 위해서 어쩔 수 없이 from절에 서브쿼리를 넣는 경우가 생김
        - 그러나 DB는 데이터만 필터링/그룹핑만 해서 가져오고 로직이나 화면 맞춤용 데이터는 해당 레이어에서 수정하도록 하는 것을 권장
          - DB는 최대한 데이터를 가져오는 용도로만 사용하길 추천
-   
+
    - Case문
 
      - TIP
        - case when문을 쓸 수 있지만 DB에 과부하를 막기 위해 DB가 아닌 어플리케이션/프레젠테이션단에서 데이터를 전환/수정하는 것을 추천
-   
+
    - 상수, 문자 더하기
 
      - TIP
        - 문자가 아닌 다른 타입들은 `stringValue()`로 문자로 변환할 수 있고, ENUM을 처리할 때도 자주 사용
-   
+
 4. 중급 문법
 
    - 프로젝션과 결과 반환 - 기본
@@ -660,6 +660,71 @@
        - lower 같은 ansi 표준 함수들은 querydsl이 상당부분 내장
 
 5. 실무 활용 - 순수 JPA와 QueryDsl
+
+   - 순수 JPA 리포지토리와 QueryDsl
+
+   - 동적 쿼리와 성능 최적화 조회 - Builder 사용
+
+     - MemberTeamDto 생성
+
+       - ```java
+         @Data
+         public class MemberTeamDto {
+             private Long memberId;
+             private String username;
+             private int age;
+             private Long teamId;
+             private String teamName;
+         
+             @QueryProjection //DTO가 순수 객체여야하는데 @QueryProjection를 쓰면 QueryDsl에 의존적인게 단점
+             public MemberTeamDto(Long memberId, String username, int age, Long teamId, String teamName) {
+                 this.memberId = memberId;
+                 this.username = username;
+                 this.age = age;
+                 this.teamId = teamId;
+                 this.teamName = teamName;
+             }
+         }
+         ```
+
+     - searchByBuilder 생성
+
+       - ```java
+         //동적쿼리를 사용할 때는 조건에 부합하는게 없으면 전체 조회가 되므로, 기본 조건이 있거나 아님 limit를 걸어주는게 좋다
+         public List<MemberTeamDto> searchByBuilder(MemberSearchCondition condition) {
+         
+           BooleanBuilder builder = new BooleanBuilder();
+           if (condition.getUsername() != null) {
+               builder.and(member.username.eq(condition.getUsername()));
+           }
+           if (condition.getTeamName() != null) {
+               builder.and(member.team.name.eq(condition.getTeamName()));
+           }
+           if (condition.getAgeGoe() != null) {
+               builder.and(member.age.goe(condition.getAgeGoe()));
+           }
+           if (condition.getAgeLoe() != null) {
+               builder.and(member.age.loe(condition.getAgeLoe()));
+           }
+         
+           return jpaQueryFactory
+                   .select(new QMemberTeamDto(
+                           member.id,
+                           member.username,
+                           member.age,
+                           team.id,
+                           team.name
+                   ))
+                   .from(member)
+                   .leftJoin(member.team, team)
+                   .where(builder)
+                   .fetch();
+         }
+         ```
+
+   - 동적 쿼리와 성능 최적화 조회 - Where절 파라미터 사용
+
+   - 조회 API 컨트롤러 개발
 
 6. 실무 활용 - 스프링 데이터 JPA와 QueryDsl
 

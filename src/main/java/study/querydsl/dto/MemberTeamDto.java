@@ -11,7 +11,7 @@ public class MemberTeamDto {
     private Long teamId;
     private String teamName;
 
-    @QueryProjection
+    @QueryProjection //DTO가 순수 객체여야하는데 @QueryProjection를 쓰면 QueryDsl에 의존적인게 단점
     public MemberTeamDto(Long memberId, String username, int age, Long teamId, String teamName) {
         this.memberId = memberId;
         this.username = username;

@@ -8,13 +8,13 @@ import study.querydsl.dto.MemberSearchCondition;
 import study.querydsl.dto.MemberTeamDto;
 import study.querydsl.dto.QMemberTeamDto;
 import study.querydsl.entity.Member;
-import study.querydsl.entity.QTeam;
 
 import java.util.List;
 import java.util.Optional;
 
+import static org.springframework.util.StringUtils.hasText;
 import static study.querydsl.entity.QMember.member;
-import static study.querydsl.entity.QTeam.*;
+import static study.querydsl.entity.QTeam.team;
 
 @Repository
 public class MemberJpaRepository {
@@ -72,13 +72,14 @@ public class MemberJpaRepository {
                 .fetch();
     }
 
+    //동적쿼리를 사용할 때는 조건에 부합하는게 없으면 전체 조회가 되므로, 기본 조건이 있거나 아님 limit를 걸어주는게 좋다
     public List<MemberTeamDto> searchByBuilder(MemberSearchCondition condition) {
 
         BooleanBuilder builder = new BooleanBuilder();
-        if (condition.getUsername() != null) {
+        if (hasText(condition.getUsername())) {
             builder.and(member.username.eq(condition.getUsername()));
         }
-        if (condition.getTeamName() != null) {
+        if (hasText(condition.getTeamName())) {
             builder.and(member.team.name.eq(condition.getTeamName()));
         }
         if (condition.getAgeGoe() != null) {
