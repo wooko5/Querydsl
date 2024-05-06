@@ -724,7 +724,54 @@
 
    - 동적 쿼리와 성능 최적화 조회 - Where절 파라미터 사용
 
+     - ```java
+       //Where절 파라미터 사용 - 해당 방법을 가장 추천
+       public List<MemberTeamDto> searchByWhereParameter(MemberSearchCondition condition) {
+           return jpaQueryFactory
+                   .select(new QMemberTeamDto(
+                           member.id,
+                           member.username,
+                           member.age,
+                           team.id,
+                           team.name
+                   ))
+                   .from(member)
+                   .leftJoin(member.team, team)
+                   .where(
+                           usernameEq(condition.getUsername()),
+                           teamNameEq(condition.getTeamName()),
+                           ageGoe(condition.getAgeGoe()),
+                           ageLoe(condition.getAgeLoe())
+                   )
+                   .fetch();
+       }
+       ```
+
    - 조회 API 컨트롤러 개발
+
+     - 주의
+
+       - @PostConstruct와 @Transactional은 같이 사용할 수 없어서 분리해야함 그래서 `InitMember`클래스의 내부 클래스로 `InitMemberService`를 작성함
+
+     - main/resources/application.yml
+
+       - ```yaml
+         spring:
+           profiles:
+             active: local
+         ```
+
+       - ![image-20240507002115170](C:\Users\wooko\AppData\Roaming\Typora\typora-user-images\image-20240507002115170.png)
+
+     - test/resources/application.yml
+
+       - ```yaml
+         spring:
+           profiles:
+             active: test
+         ```
+
+       - ![image-20240507002717244](C:\Users\wooko\AppData\Roaming\Typora\typora-user-images\image-20240507002717244.png)
 
 6. 실무 활용 - 스프링 데이터 JPA와 QueryDsl
 
