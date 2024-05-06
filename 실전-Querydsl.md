@@ -761,7 +761,7 @@
              active: local
          ```
 
-       - ![image-20240507002115170](C:\Users\wooko\AppData\Roaming\Typora\typora-user-images\image-20240507002115170.png)
+       - ![image-20240507002115170](https://github.com/wooko5/Querydsl/assets/58154633/102c14d5-c7d5-4897-83a1-99b075904631)
 
      - test/resources/application.yml
 
@@ -771,7 +771,7 @@
              active: test
          ```
 
-       - ![image-20240507002717244](C:\Users\wooko\AppData\Roaming\Typora\typora-user-images\image-20240507002717244.png)
+       - ![image-20240507002717244](https://github.com/wooko5/Querydsl/assets/58154633/4921fdac-52f2-4caa-ae7e-2815a6c398ec)
 
 6. 실무 활용 - 스프링 데이터 JPA와 QueryDsl
 
