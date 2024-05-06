@@ -13,6 +13,7 @@ import study.querydsl.entity.Member;
 import java.util.List;
 import java.util.Optional;
 
+import static org.springframework.util.StringUtils.hasLength;
 import static org.springframework.util.StringUtils.hasText;
 import static study.querydsl.entity.QMember.member;
 import static study.querydsl.entity.QTeam.team;
@@ -140,11 +141,11 @@ public class MemberJpaRepository {
     }
 
     private BooleanExpression usernameEq(String username) {
-        return hasText(username) ? null : member.username.eq(username);
+        return !hasLength(username) ? null : member.username.eq(username);
     }
 
     private BooleanExpression teamNameEq(String teamName) {
-        return hasText(teamName) ? null : member.team.name.eq(teamName);
+        return !hasLength(teamName) ? null : member.team.name.eq(teamName);
     }
 
     private BooleanExpression ageGoe(Integer ageGoe) {
