@@ -104,8 +104,8 @@ public class MemberJpaRepository {
                 .fetch();
     }
 
+    //Where절 파라미터 사용 - 해당 방법을 가장 추천
     public List<MemberTeamDto> searchByWhereParameter(MemberSearchCondition condition) {
-
         return jpaQueryFactory
                 .select(new QMemberTeamDto(
                         member.id,
@@ -115,6 +115,20 @@ public class MemberJpaRepository {
                         team.name
                 ))
                 .from(member)
+                .leftJoin(member.team, team)
+                .where(
+                        usernameEq(condition.getUsername()),
+                        teamNameEq(condition.getTeamName()),
+                        ageGoe(condition.getAgeGoe()),
+                        ageLoe(condition.getAgeLoe())
+                )
+                .fetch();
+    }
+
+    //Where절 파라미터 사용 - select절의 projection이 달라져도 재사용할 수 있는 장점이 있음
+    public List<Member> searchMemberByWhereParameter(MemberSearchCondition condition) {
+        return jpaQueryFactory
+                .selectFrom(member)
                 .leftJoin(member.team, team)
                 .where(
                         usernameEq(condition.getUsername()),
