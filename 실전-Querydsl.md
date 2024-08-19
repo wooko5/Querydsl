@@ -576,7 +576,6 @@
                      ).getResultList();
          }
          ```
-
      - QueryDsl Bean 생성(Bean population)
 
        - 프로퍼티 접근 - Setter
@@ -623,7 +622,6 @@
              }
          }
          ```
-
        - 단점
 
          - **DTO에 어노테이션이 붙기 때문에 controller, service, repository layer에서 모두 쓰이는 DTO는 순수함(오직 데이터를 옮기는 객체로서의 역할)을 유지할 필요가 있는데 어노테이션을 선언하는 순간 QueryDSL에 의존성이 발생**
